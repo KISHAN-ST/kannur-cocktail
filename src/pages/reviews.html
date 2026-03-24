@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reviews — Kannur Cocktail</title>
+  <link rel="stylesheet" href="../../public/assets/style.css"/>
+  <style>
+    .rating-summary {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:40px; display:flex; align-items:center; gap:48px; flex-wrap:wrap;
+      margin-bottom:56px;
+    }
+    .rating-big { text-align:center; flex-shrink:0; }
+    .rating-big .num { font-family:var(--font-head); font-size:80px; font-weight:900; color:var(--gold); line-height:1; }
+    .rating-big .stars { font-size:28px; letter-spacing:4px; margin:8px 0; }
+    .rating-big p { color:var(--muted); font-size:14px; font-family:var(--font-ui); }
+    .rating-bars { flex:1; display:flex; flex-direction:column; gap:10px; }
+    .rating-bar-row { display:flex; align-items:center; gap:12px; }
+    .rating-bar-row .star-label { font-family:var(--font-head); font-size:12px; color:var(--muted); width:12px; text-align:right; }
+    .rating-bar-row .stars-sm { font-size:12px; color:var(--gold); }
+    .bar-track { flex:1; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; }
+    .bar-fill { height:100%; background:linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius:3px; transition:width 1.2s cubic-bezier(0.4,0,0.2,1); }
+    .bar-count { font-family:var(--font-ui); font-size:12px; color:var(--muted); min-width:16px; }
+
+    .reviews-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+
+    .review-submit {
+      background:linear-gradient(135deg, var(--surface), var(--surface2));
+      border:1px solid var(--border); border-radius:var(--radius); padding:40px;
+      max-width:640px; margin:0 auto;
+    }
+    .star-picker { display:flex; gap:8px; margin:8px 0 4px; }
+    .star-pick {
+      font-size:32px; cursor:pointer; transition:transform 0.15s;
+      filter:grayscale(1) opacity(0.4);
+    }
+    .star-pick.active { filter:none; transform:scale(1.15); }
+    .star-pick:hover { transform:scale(1.2); filter:none; }
+
+    @media(max-width:900px) { .reviews-grid { grid-template-columns:1fr 1fr; } }
+    @media(max-width:600px) { .reviews-grid { grid-template-columns:1fr; } .rating-summary { gap:24px; } .rating-big .num { font-size:56px; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" id="main-nav">
+  <a href="index.html" class="nav-logo"><span class="nav-logo-slot"></span><div class="nav-logo-text"><span>KANNUR</span><span>cocktail</span></div></a>
+  <div class="nav-links"><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="address.html">Visit Us</a><a href="contact.html">Contact</a><a href="reviews.html" class="active">Reviews</a></div>
+  <div style="display:flex;align-items:center;gap:12px"><button class="nav-cart-btn" onclick="openCart()">🛒 Cart<span class="cart-badge" id="nav-cart-badge">0</span></button><div class="nav-hamburger"><span></span><span></span><span></span></div></div>
+</nav>
+<div class="cart-overlay" id="cart-overlay"></div>
+<aside class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header"><h3>🛒 Your Order</h3><button class="cart-close" onclick="closeCart()">×</button></div>
+  <div class="cart-items"><div class="cart-empty" id="cart-empty-state" style="display:flex"><div class="empty-icon">🥤</div><p>Your cart is empty</p></div><div id="cart-items-list"></div></div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-summary">
+      <span>Total Cost</span><strong class="cart-total-cost">Rs 0</strong>
+    </div>
+    <div class="cart-form">
+      <input class="cart-input" id="order-name" type="text" placeholder="Your name" required/>
+      <input class="cart-input" id="order-flat" type="text" placeholder="Flat / Unit No" required/>
+      <input class="cart-input" id="order-address" type="text" placeholder="Full address" required/>
+    </div>
+    <textarea class="cart-note" id="order-note" rows="2" placeholder="Special instructions…"></textarea>
+    <button class="btn btn-wa" style="width:100%;justify-content:center;padding:16px" onclick="placeOrder()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      Order via WhatsApp
+    </button>
+    <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="clearCart()">Clear Cart</button>
+  </div>
+</aside>
+<div class="toast" id="global-toast"></div>
+
+<!-- PAGE HERO -->
+<section class="page-hero">
+  <div class="page-hero-bg"></div>
+  <div class="label animate-in d1">Customer Love</div>
+  <h1 class="animate-in d2">What People <em style="font-style:italic;color:var(--gold)">Say</em></h1>
+  <p class="animate-in d3">Real reviews from our happy customers</p>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    <!-- RATING SUMMARY -->
+    <div class="rating-summary reveal">
+      <div class="rating-big">
+        <div class="num">4.8</div>
+        <div class="stars">★★★★★</div>
+        <p>Based on 120+ reviews</p>
+      </div>
+      <div class="rating-bars">
+        <div class="rating-bar-row"><span class="star-label">5</span><span class="stars-sm">★</span><div class="bar-track"><div class="bar-fill" style="width:0" data-w="82%"></div></div><span class="bar-count">98</span></div>
+        <div class="rating-bar-row"><span class="star-label">4</span><span class="stars-sm">★</span><div class="bar-track"><div class="bar-fill" style="width:0" data-w="12%"></div></div><span class="bar-count">14</span></div>
+        <div class="rating-bar-row"><span class="star-label">3</span><span class="stars-sm">★</span><div class="bar-track"><div class="bar-fill" style="width:0" data-w="4%"></div></div><span class="bar-count">5</span></div>
+        <div class="rating-bar-row"><span class="star-label">2</span><span class="stars-sm">★</span><div class="bar-track"><div class="bar-fill" style="width:0" data-w="1%"></div></div><span class="bar-count">2</span></div>
+        <div class="rating-bar-row"><span class="star-label">1</span><span class="stars-sm">★</span><div class="bar-track"><div class="bar-fill" style="width:0" data-w="1%"></div></div><span class="bar-count">1</span></div>
+      </div>
+      <div style="text-align:center">
+        <a href="https://g.co/kgs/" target="_blank" class="btn btn-gold">Rate on Google</a>
+        <p style="color:var(--muted);font-size:12px;margin-top:8px;font-style:italic">Share your experience</p>
+      </div>
+    </div>
+
+    <!-- REVIEWS GRID -->
+    <div class="reviews-grid" id="reviews-grid"></div>
+
+    <!-- SUBMIT REVIEW -->
+    <div style="margin-top:72px">
+      <div class="section-header reveal">
+        <div class="label">Your Turn</div>
+        <h2>Share Your <em style="font-style:italic;color:var(--gold)">Experience</em></h2>
+        <p>Tell us what you loved — it means the world to us</p>
+      </div>
+      <div class="review-submit reveal">
+        <div class="form-fields" style="display:flex;flex-direction:column;gap:20px">
+          <div class="form-group">
+            <label>Your Name</label>
+            <input type="text" id="rv-name" placeholder="Your name"/>
+          </div>
+          <div class="form-group">
+            <label>Rating</label>
+            <div class="star-picker" id="star-picker">
+              <span class="star-pick" data-val="1">⭐</span>
+              <span class="star-pick" data-val="2">⭐</span>
+              <span class="star-pick" data-val="3">⭐</span>
+              <span class="star-pick" data-val="4">⭐</span>
+              <span class="star-pick" data-val="5">⭐</span>
+            </div>
+            <small style="color:var(--muted);font-size:12px;font-style:italic" id="star-label">Click to rate</small>
+          </div>
+          <div class="form-group">
+            <label>Your Review</label>
+            <textarea id="rv-text" rows="4" placeholder="What did you love? Which drink was your favourite?"></textarea>
+          </div>
+          <button class="btn btn-gold" style="align-self:flex-start" onclick="submitReview()">
+            Submit via WhatsApp ✦
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><h3>KANNUR COCKTAIL</h3><p>Premium fresh juices and milkshakes served with love and Kerala's spirit.</p></div>
+      <div class="footer-col"><h4>Quick Links</h4><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="address.html">Visit Us</a><a href="contact.html">Contact</a></div>
+      <div class="footer-col"><h4>Location</h4><p>Near Challaghatta Metro Station</p><p>Raja Rajeshwari Hospital Road</p><p>Bengaluru, Karnataka</p></div>
+    </div>
+    <div class="footer-bottom"><p>© 2025 Kannur Cocktail. All rights reserved.</p><p style="color:var(--gold);font-style:italic">Fresh Every Drop ✦</p></div>
+  </div>
+</footer>
+
+<script src="../../public/assets/app.js"></script>
+<script>
+/* ── REVIEWS DATA ── */
+const REVIEWS = [
+  { name:'Arjun Menon', init:'A', rating:5, text:'Best Mango shake I have ever had! Fresh, thick and absolutely delicious. The pomegranate seeds on the cocktail shake were a delightful touch. Will definitely come back!', date:'March 2025', item:'Mango Shake' },
+  { name:'Priya Sharma', init:'P', rating:5, text:'The Pineapple Mint combo juice is a revelation — refreshing, tangy and perfectly balanced. Staff is very friendly too. My go-to stop after the metro!', date:'February 2025', item:'Pineapple Mint' },
+  { name:'Rahul Nair', init:'R', rating:5, text:'Tried the Kannur Cocktail milkshake and it blew my mind. Rich, creamy and tasted totally natural. Great location near the metro station!', date:'March 2025', item:'Cocktail Shake' },
+  { name:'Sneha Krishnan', init:'S', rating:4, text:'Really loved the avocado shake — thick and fresh. A bit of a wait during peak hours but totally worth it. Love supporting this local gem!', date:'January 2025', item:'Avocado Shake' },
+  { name:'Mohammed Afraz', init:'M', rating:5, text:'Cold coffee here is the real deal — no artificial flavour, just pure freshness. Perfect spot near RR Hospital. Highly recommend to all health-conscious folks.', date:'March 2025', item:'Cold Coffee' },
+  { name:'Lakshmi Devi', init:'L', rating:5, text:'The Dry Fruit shake is absolutely amazing — feels like a nutritious meal in a glass! The ambience is cosy and the owner is very warm. 5 stars easily!', date:'February 2025', item:'Dry Fruit Shake' },
+];
+
+function buildReviews() {
+  const grid = document.getElementById('reviews-grid');
+  grid.innerHTML = REVIEWS.map((r,i) => `
+    <div class="review-card reveal d${(i%3)+1}">
+      <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+      <p class="review-text">"${r.text}"</p>
+      ${r.item ? `<div style="font-size:12px;color:var(--gold);font-family:var(--font-head);letter-spacing:1px;margin-bottom:12px;opacity:0.8">Tried: ${r.item}</div>` : ''}
+      <div class="review-author">
+        <div class="review-avatar">${r.init}</div>
+        <div><div class="review-author-name">${r.name}</div><div class="review-date">${r.date}</div></div>
+      </div>
+    </div>`).join('');
+}
+buildReviews();
+
+/* ── STAR PICKER ── */
+let selectedRating = 0;
+const starLabels = ['','Poor','Fair','Good','Great','Excellent ✦'];
+document.querySelectorAll('.star-pick').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.dataset.val);
+    document.querySelectorAll('.star-pick').forEach((s,i) => s.classList.toggle('active', i < selectedRating));
+    document.getElementById('star-label').textContent = starLabels[selectedRating];
+  });
+  star.addEventListener('mouseenter', () => {
+    const val = parseInt(star.dataset.val);
+    document.querySelectorAll('.star-pick').forEach((s,i) => s.style.filter = i < val ? 'none' : 'grayscale(1) opacity(0.4)');
+  });
+});
+document.getElementById('star-picker').addEventListener('mouseleave', () => {
+  document.querySelectorAll('.star-pick').forEach((s,i) => {
+    s.style.filter = i < selectedRating ? 'none' : 'grayscale(1) opacity(0.4)';
+  });
+});
+
+function submitReview() {
+  const name = document.getElementById('rv-name').value || 'Anonymous';
+  const text = document.getElementById('rv-text').value;
+  if (!text.trim()) { showToast('Please write your review! 📝'); return; }
+  const stars = selectedRating > 0 ? '⭐'.repeat(selectedRating) : 'No rating';
+  let msg = `*KANNUR COCKTAIL — Customer Review*\n\n`;
+  msg += `👤 Name: ${name}\n`;
+  msg += `⭐ Rating: ${stars} (${selectedRating}/5)\n\n`;
+  msg += `💬 Review:\n${text}`;
+  window.open(`https://wa.me/8861015324?text=${encodeURIComponent(msg)}`, '_blank');
+  showToast('Thank you for your review! 🙏');
+}
+
+/* ── ANIMATE RATING BARS ON SCROLL ── */
+const barObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.w;
+      });
+      barObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelector('.rating-summary') && barObserver.observe(document.querySelector('.rating-summary'));
+</script>
+</body>
+</html>
